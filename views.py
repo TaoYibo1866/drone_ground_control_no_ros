@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QWidget, QPushButton, QLabel
 import numpy as np

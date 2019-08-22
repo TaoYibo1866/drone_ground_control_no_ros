@@ -89,8 +89,9 @@ class Server:
                 if tail != 0xDD:
                     continue
             except AssertionError:
-                print("client shut down")
+                print("try reconnect")
                 self.accept()
+                print("new connection established")
             if msg_type == 0:
                 config_param = struct.unpack("<?", buffer)
                 config_param = config_param + (timestamp_ms,)
