@@ -33,7 +33,7 @@ class Server:
     def __init__(self, host, port):
         self.start = time.clock()
         self.frame_queue = Queue(1)
-        self.config_param_queue = Queue(1)
+        self.state_param_queue = Queue(1)
         self.sensor_data_queue = Queue(200)
         self.visual_data_queue = Queue(200)
         self.run = True
@@ -93,12 +93,15 @@ class Server:
                 self.accept()
                 print("new connection established")
             if msg_type == 0:
-                config_param = struct.unpack("<?", buffer)
-                config_param = config_param + (timestamp_ms,)
-                self.config_param_queue.push(config_param)
+                state_param = struct.unpack("<??", buffer)
+                state_param = state_param + (timestamp_ms,)
+                self.state_param_queue.push(state_param)
             elif msg_type == 1:
                 frame = cv2.imdecode(np.fromstring(buffer, dtype=np.uint8), -1)
-                self.frame_queue.push(frame)
+                if frame is not None:
+                    self.frame_queue.push(frame)
+                else:
+                    print("decode error")
             elif msg_type == 2:
                 sensor_data = struct.unpack("<5d", buffer)
                 sensor_data = sensor_data + (timestamp_ms,)

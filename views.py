@@ -6,20 +6,24 @@ from numpy import linspace
 import pyqtgraph as pg
 
 import struct
+import sys
+if '/opt/ros/kinetic/lib/python2.7/dist-packages' in sys.path:
+    sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
+import cv2
 
-class ConfigParamPanel(QWidget):
+class StateParamPanel(QWidget):
     def __init__(self):
         super().__init__()
         # Widgets: Buttons, Sliders, ...
-        self.rec_label = QLabel()
+        self.video_streaming_label = QLabel()
         # Widgets layout
         self.layout = QGridLayout(self)
-        self.layout.addWidget(self.rec_label, 0, 0)
-    def update(self, config_param_queue):
-        if config_param_queue == []:
+        self.layout.addWidget(self.video_streaming_label, 0, 0)
+    def update(self, state_param_queue):
+        if state_param_queue == []:
             return
-        param = config_param_queue[0]
-        self.rec_label.setText("REC: " + str(param[0]))
+        param = state_param_queue[0]
+        self.video_streaming_label.setText("录制开启: " + str(param[1]))
 
 class ControlWidget(QWidget):
     def __init__(self, server):
@@ -36,12 +40,18 @@ class ControlWidget(QWidget):
         self.start_data_saving_button = QPushButton("保存数据", self)
         self.stop_data_saving_button = QPushButton("停止", self)
 
+        self.start_video_streaming_button = QPushButton("开始图传", self)
+        self.stop_video_streaming_button = QPushButton("停止", self)
+
         # Signals
         self.start_video_recording_button.clicked.connect(self.start_video_recording)
         self.stop_video_recording_button.clicked.connect(self.stop_video_recording)
 
         self.start_data_saving_button.clicked.connect(self.start_data_saving)
         self.stop_data_saving_button.clicked.connect(self.stop_data_saving)
+
+        self.start_video_streaming_button.clicked.connect(self.start_video_streaming)
+        self.stop_video_streaming_button.clicked.connect(self.stop_video_streaming)
 
         # Widgets layout
         self.layout = QGridLayout(self)
@@ -54,12 +64,20 @@ class ControlWidget(QWidget):
         self.layout.addWidget(self.stop_video_recording_button, 1, 1)
         self.layout.addWidget(self.start_data_saving_button, 2, 0)
         self.layout.addWidget(self.stop_data_saving_button, 2, 1)
-    def start_video_recording(self):
+        self.layout.addWidget(self.start_video_streaming_button, 3, 0)
+        self.layout.addWidget(self.stop_video_streaming_button, 3, 1)
+    def start_video_streaming(self):
         buffer = struct.pack('<?', True)
         self.server.send_msg(buffer, 1, 4)
-    def stop_video_recording(self):
+    def stop_video_streaming(self):
         buffer = struct.pack('<?', False)
         self.server.send_msg(buffer, 1, 4)
+    def start_video_recording(self):
+        buffer = struct.pack('<?', True)
+        self.server.send_msg(buffer, 1, 5)
+    def stop_video_recording(self):
+        buffer = struct.pack('<?', False)
+        self.server.send_msg(buffer, 1, 5)
     def start_data_saving(self):
         return
     def stop_data_saving(self):
@@ -153,7 +171,7 @@ class MainWindow(QMainWindow):
         self.video_widget = pg.GraphicsView()
         self.canvas = Canvas()
         self.control_widget = ControlWidget(server)
-        self.config_param_panel = ConfigParamPanel()
+        self.state_param_panel = StateParamPanel()
 
         # Timer for acquiring images at regular intervals
         self.acquisition_timer = QTimer()
@@ -170,23 +188,26 @@ class MainWindow(QMainWindow):
         self.layout.setRowStretch(1, 1)
         self.layout.addWidget(self.video_widget, 0, 0, 1, 2)
         self.layout.addWidget(self.canvas, 0, 2, 2, 3)
-        self.layout.addWidget(self.config_param_panel, 1, 0)
+        self.layout.addWidget(self.state_param_panel, 1, 0)
         self.layout.addWidget(self.control_widget, 1, 1)
 
         self.setCentralWidget(self.central_widget)
     def update(self):
         frame_queue = self.server.frame_queue.read()
-        if frame_queue == []:
-            return
-        frame = pg.ImageItem(frame_queue[0].T)
-        self.video_widget.addItem(frame)
+        if frame_queue != []:
+            frame = cv2.cvtColor( frame_queue[0], cv2.COLOR_BGR2RGB)
+            frame = cv2.resize(frame, None, fx=1, fy=1)
+            frame = frame.transpose([1,0,2])
+            frame = pg.ImageItem(frame)
+            #frame = pg.ImageItem(frame_queue[0].T)
+            self.video_widget.addItem(frame)
         
         visual_data_queue = self.server.visual_data_queue.read()
         sensor_data_queue = self.server.sensor_data_queue.read()
         self.canvas.update(visual_data_queue, sensor_data_queue)
 
-        config_param_queue = self.server.config_param_queue.read()
-        self.config_param_panel.update(config_param_queue)
+        state_param_queue = self.server.state_param_queue.read()
+        self.state_param_panel.update(state_param_queue)
     def closeEvent(self, event):
         event.accept()
         self.server.close()
