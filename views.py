@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QMainWindow, QGridLayout, QWidget, QPushButton, QLab
 import numpy as np
 from numpy import linspace
 import pyqtgraph as pg
-
+#from mem_top import mem_top
 import struct
 import sys
 if '/opt/ros/kinetic/lib/python2.7/dist-packages' in sys.path:
@@ -168,7 +168,10 @@ class MainWindow(QMainWindow):
         self.central_widget = QWidget()
 
         # Widgets: Buttons, Sliders, ...
-        self.video_widget = pg.GraphicsView()
+        self.video_widget = pg.GraphicsLayoutWidget()
+        self.video_widget_box = self.video_widget.addViewBox()
+        self.video_widget_Item = pg.ImageItem()
+        self.video_widget_box.addItem(self.video_widget_Item)
         self.canvas = Canvas()
         self.control_widget = ControlWidget(server)
         self.state_param_panel = StateParamPanel()
@@ -193,15 +196,17 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.central_widget)
     def update(self):
+        #print( mem_top())
         frame_queue = self.server.frame_queue.read()
         if frame_queue != []:
             frame = cv2.cvtColor( frame_queue[0], cv2.COLOR_BGR2RGB)
             frame = cv2.rotate( frame, cv2.ROTATE_180 )
             frame = cv2.resize(frame, None, fx=1.2, fy=1.2)
             frame = frame.transpose([1,0,2])
-            frame = pg.ImageItem(frame)
+            self.video_widget_Item.setImage(frame)
+            #frame = pg.ImageItem(frame)
             #frame = pg.ImageItem(frame_queue[0].T)
-            self.video_widget.addItem(frame)
+            #self.video_widget.addItem(frame)
         
         visual_data_queue = self.server.visual_data_queue.read()
         sensor_data_queue = self.server.sensor_data_queue.read()
