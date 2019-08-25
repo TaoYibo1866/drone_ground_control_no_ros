@@ -9,7 +9,7 @@ if len( argv ) == 1:
     host = '192.168.11.27'
 else:
     host = '127.0.0.1'
-server = Server('127.0.0.1', 8080)
+server = Server(host, 8080)
 app = QApplication([])
 main_window = MainWindow(server)
 main_window.show()
