@@ -55,6 +55,7 @@ class Server:
     def close(self):
         self.close_recv_thread()
         self.sock.shutdown(2)
+        self.recv_thread.join()
         self.sock.close()
     def start_recv_thread(self):
         self.run = True
@@ -64,7 +65,6 @@ class Server:
     def close_recv_thread(self):
         if self.recv_thread.isAlive():
             self.run = False
-            self.recv_thread.join()
         return
     def recvall(self, n):
         data = b''
@@ -90,8 +90,11 @@ class Server:
                     continue
             except AssertionError:
                 print("try reconnect")
-                self.accept()
-                print("new connection established")
+                try:
+                    self.accept()
+                    print("new connection established")
+                except:
+                    print("socket been shutdown")
             if msg_type == 0:
                 state_param = struct.unpack("<??", buffer)
                 state_param = state_param + (timestamp_ms,)

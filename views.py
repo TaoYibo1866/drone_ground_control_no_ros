@@ -87,67 +87,67 @@ class Canvas(pg.GraphicsLayoutWidget):
     def __init__(self):
         super().__init__()
         # Widgets layout
-        self.p1 = self.addPlot(row=0, col=0)
-        self.p2 = self.addPlot(row=1, col=0)
-        self.p3 = self.addPlot(row=2, col=0)
-        self.p4 = self.addPlot(row=3, col=0)
+        self.visual_x_plot = self.addPlot(row=0, col=0)
+        self.visual_y_plot = self.addPlot(row=1, col=0)
+        self.visual_z_plot = self.addPlot(row=2, col=0)
+        self.visual_pose_plot = self.addPlot(row=3, col=0)
         self.p5 = self.addPlot(row=4, col=0)
         self.p6 = self.addPlot(row=5, col=0)
-        self.p7 = self.addPlot(row=0, col=1, rowspan=3, colspan=1)
-        self.p8 = self.addPlot(row=3, col=1)
-        self.p9 = self.addPlot(row=4, col=1)
-        self.p10 = self.addPlot(row=5, col=1)
+        self.location = self.addPlot(row=0, col=1, rowspan=3, colspan=1)
+        self.height = self.addPlot(row=3, col=1)
+        self.vx = self.addPlot(row=4, col=1)
+        self.vy = self.addPlot(row=5, col=1)
 
-        self.p1.setXRange(0, 200)
-        self.p2.setXRange(0, 200)
-        self.p3.setXRange(0, 200)
-        self.p4.setXRange(0, 200)
+        self.visual_x_plot.setXRange(0, 200)
+        self.visual_y_plot.setXRange(0, 200)
+        self.visual_z_plot.setXRange(0, 200)
+        self.visual_pose_plot.setXRange(0, 200)
         self.p5.setXRange(0, 200)
         self.p6.setXRange(0, 200)
-        self.p7.setXRange(-15, 15)
-        self.p7.setYRange(-15, 15)
-        self.p7.setAspectLocked()
-        self.p8.setXRange(0, 200)
-        self.p9.setXRange(0, 200)
-        self.p10.setXRange(0, 200)
+        self.location.setXRange(-15, 15)
+        self.location.setYRange(-15, 15)
+        self.location.setAspectLocked()
+        self.height.setXRange(0, 200)
+        self.vx.setXRange(0, 200)
+        self.vy.setXRange(0, 200)
 
-        self.p1.setLabel('left', text="相对位置x(cm)")
-        self.p2.setLabel('left', text="相对位置y(cm)")
-        self.p3.setLabel('left', text="相对位置z(cm)")
-        self.p4.setLabel('left', text="相对位姿R(deg)")
+        self.visual_x_plot.setLabel('left', text="相对位置x(cm)")
+        self.visual_y_plot.setLabel('left', text="相对位置y(cm)")
+        self.visual_z_plot.setLabel('left', text="相对位置z(cm)")
+        self.visual_pose_plot.setLabel('left', text="相对位姿R(deg)")
         self.p5.setLabel('left', text="相对位姿P(deg)")
         self.p6.setLabel('left', text="相对位姿Y(deg)")
-        self.p7.setLabel('top', text="航迹俯视图")
-        self.p8.setLabel('left', text="uav高度h(m)")
-        self.p9.setLabel('left', text="uav水平速度Vx(m/s)")
-        self.p10.setLabel('left', text="uav水平速度Vy(m/s)")
+        self.location.setLabel('top', text="航迹俯视图")
+        self.height.setLabel('left', text="uav高度h(m)")
+        self.vx.setLabel('left', text="uav水平速度Vx(m/s)")
+        self.vy.setLabel('left', text="uav水平速度Vy(m/s)")
 
-        self.curve1 = self.p1.plot()
-        self.curve2 = self.p2.plot()
-        self.curve3 = self.p3.plot()
-        self.curve4 = self.p4.plot()
-        self.curve5 = self.p5.plot()
-        self.curve6 = self.p6.plot()
-        self.curve7 = self.p7.plot()
-        self.curve8 = self.p8.plot()
-        self.curve9 = self.p9.plot()
-        self.curve10 = self.p10.plot()
+        self.visual_x_curve = self.visual_x_plot.plot()
+        self.visual_y_curve = self.visual_y_plot.plot()
+        self.visual_z_curve = self.visual_z_plot.plot()
+        self.visual_pose_r_curve = self.visual_pose_plot.plot()
+        self.visual_pose_p_curve = self.visual_pose_plot.plot()
+        self.visual_pose_y_curve = self.visual_pose_plot.plot()
+        self.location_curve = self.location.plot()
+        self.height_curve = self.height.plot()
+        self.vx_curve = self.vx.plot()
+        self.vy_curve = self.vy.plot()
     def update(self, visual_data_queue, sensor_data_queue):
         if visual_data_queue != []:
             data = np.asarray(visual_data_queue, dtype=np.float)
-            visual_x = data[..., 0]
+            visual_x_plot = data[..., 0]
             visual_y = data[..., 1]
             visual_z = data[..., 2]
             visual_R = data[..., 3]
             visual_P = data[..., 4]
             visual_Y = data[..., 5]
             t = linspace(0, len(visual_data_queue) - 1, len(visual_data_queue))
-            self.curve1.setData(t, visual_x)
-            self.curve2.setData(t, visual_y)
-            self.curve3.setData(t, visual_z)
-            self.curve4.setData(t, visual_R)
-            self.curve5.setData(t, visual_P)
-            self.curve6.setData(t, visual_Y)
+            self.visual_x_curve.setData(t, visual_x_plot, pen=pg.mkPen(color='r'))
+            self.visual_y_curve.setData(t, visual_y, pen=pg.mkPen(color='g'))
+            self.visual_z_curve.setData(t, visual_z, pen=pg.mkPen(color='b'))
+            self.visual_pose_r_curve.setData(t, visual_R, pen=pg.mkPen(color='r'))
+            self.visual_pose_p_curve.setData(t, visual_P, pen=pg.mkPen(color='g'))
+            self.visual_pose_y_curve.setData(t, visual_Y, pen=pg.mkPen(color='b'))
         if sensor_data_queue != []:
             data = np.asarray(sensor_data_queue, dtype=np.float)
             x = data[..., 0]
@@ -156,10 +156,10 @@ class Canvas(pg.GraphicsLayoutWidget):
             vx = data[..., 3]
             vy = data[..., 4]
             t = linspace(0, len(sensor_data_queue) - 1, len(sensor_data_queue))
-            self.curve7.setData(x, y)
-            self.curve8.setData(t, z)
-            self.curve9.setData(t, vx)
-            self.curve10.setData(t, vy)
+            self.location_curve.setData(x, y)
+            self.height_curve.setData(t, z)
+            self.vx_curve.setData(t, vx)
+            self.vy_curve.setData(t, vy)
 
 class MainWindow(QMainWindow):
     def __init__(self, server):
@@ -196,7 +196,8 @@ class MainWindow(QMainWindow):
         frame_queue = self.server.frame_queue.read()
         if frame_queue != []:
             frame = cv2.cvtColor( frame_queue[0], cv2.COLOR_BGR2RGB)
-            frame = cv2.resize(frame, None, fx=1, fy=1)
+            frame = cv2.rotate( frame, cv2.ROTATE_180 )
+            frame = cv2.resize(frame, None, fx=1.2, fy=1.2)
             frame = frame.transpose([1,0,2])
             frame = pg.ImageItem(frame)
             #frame = pg.ImageItem(frame_queue[0].T)
@@ -210,6 +211,6 @@ class MainWindow(QMainWindow):
         self.state_param_panel.update(state_param_queue)
     def closeEvent(self, event):
         event.accept()
-        self.server.close()
+        #self.server.close()
         self.close()
 
