@@ -201,7 +201,7 @@ class MainWindow(QMainWindow):
         if frame_queue != []:
             frame = cv2.cvtColor( frame_queue[0], cv2.COLOR_BGR2RGB)
             frame = cv2.rotate( frame, cv2.ROTATE_180 )
-            frame = cv2.resize(frame, None, fx=1.2, fy=1.2)
+            frame = cv2.resize(frame, None, fx=2, fy=2)
             frame = frame.transpose([1,0,2])
             self.video_widget_Item.setImage(frame)
             #frame = pg.ImageItem(frame)
