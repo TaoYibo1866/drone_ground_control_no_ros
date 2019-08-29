@@ -204,11 +204,9 @@ class MainWindow(QMainWindow):
             #frame = cv2.resize(frame, None, fx=2, fy=2)
             #frame = frame.transpose([1,0,2])
             frame = cv2.resize(frame_queue[0].T, None, fx=2, fy=2)
-            #frame = frame.transpose([1,0,2])
-            frame = cv2.rotate( frame, cv2.ROTATE_180 )
+            frame = cv2.flip(frame, 1)
+            #frame = cv2.rotate( frame, cv2.ROTATE_180 )
             self.video_widget_Item.setImage(frame)
-            #frame = pg.ImageItem(frame)
-            #self.video_widget.addItem(frame)
         
         visual_data_queue = self.server.visual_data_queue.read()
         sensor_data_queue = self.server.sensor_data_queue.read()

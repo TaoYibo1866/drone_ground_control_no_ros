@@ -7,8 +7,11 @@ from sys import argv
 
 if len( argv ) == 1:
     host = '192.168.11.27'
+elif argv[1] == "local":
+    host = '127.0.0.1'
 else:
-    host = '127.0.0.1' #'192.168.199.179'
+    print("invalid argv!")
+    exiet()
 server = Server(host, 8080)
 app = QApplication([])
 main_window = MainWindow(server)
