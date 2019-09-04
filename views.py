@@ -178,7 +178,7 @@ class MainWindow(QMainWindow):
 
         # Timer for acquiring images at regular intervals
         self.acquisition_timer = QTimer()
-        self.acquisition_timer.start(30)
+        self.acquisition_timer.start(100)
         self.acquisition_timer.timeout.connect(self.update)
         
         self.layout = QGridLayout(self.central_widget)
@@ -203,7 +203,7 @@ class MainWindow(QMainWindow):
             #frame = cv2.rotate( frame, cv2.ROTATE_180 )
             #frame = cv2.resize(frame, None, fx=2, fy=2)
             #frame = frame.transpose([1,0,2])
-            frame = cv2.resize(frame_queue[0].T, None, fx=2, fy=2)
+            frame = cv2.resize(frame_queue[0].T, None, fx=1, fy=1)
             frame = cv2.flip(frame, 1)
             #frame = cv2.rotate( frame, cv2.ROTATE_180 )
             self.video_widget_Item.setImage(frame)
