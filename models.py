@@ -48,6 +48,7 @@ class Server:
     def bind_listen(self, host, port):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 128*1024*1024)
         self.sock.bind((host, port))
         self.sock.listen()
     def accept(self):
@@ -71,7 +72,7 @@ class Server:
         while len(data) < n:
             packet = self.conn.recv(n - len(data))
             assert packet != b''
-            data += packet
+            data = data + packet
         return data
     def recv_loop(self):
         while True:
@@ -99,8 +100,10 @@ class Server:
                 state_param = struct.unpack("<??", buffer)
                 state_param = state_param + (timestamp_ms,)
                 self.state_param_queue.push(state_param)
+                #print(state_param)
             elif msg_type == 1:
                 frame = cv2.imdecode(np.fromstring(buffer, dtype=np.uint8), -1)
+                #print( length )
                 if frame is not None:
                     self.frame_queue.push(frame)
                 else:

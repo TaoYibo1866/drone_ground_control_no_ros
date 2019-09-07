@@ -178,7 +178,7 @@ class MainWindow(QMainWindow):
 
         # Timer for acquiring images at regular intervals
         self.acquisition_timer = QTimer()
-        self.acquisition_timer.start(100)
+        self.acquisition_timer.start(30)
         self.acquisition_timer.timeout.connect(self.update)
         
         self.layout = QGridLayout(self.central_widget)
