@@ -15,15 +15,15 @@ class StateParamPanel(QWidget):
     def __init__(self):
         super().__init__()
         # Widgets: Buttons, Sliders, ...
-        self.video_streaming_label = QLabel()
+        self.video_recording_label = QLabel()
         # Widgets layout
         self.layout = QGridLayout(self)
-        self.layout.addWidget(self.video_streaming_label, 0, 0)
+        self.layout.addWidget(self.video_recording_label, 0, 0)
     def update(self, state_param_queue):
         if state_param_queue == []:
             return
         param = state_param_queue[0]
-        self.video_streaming_label.setText("录制开启: " + str(param[1]))
+        self.video_recording_label.setText("录制开启: " + str(param[1]))
 
 class ControlWidget(QWidget):
     def __init__(self, server):
@@ -162,18 +162,20 @@ class Canvas(pg.GraphicsLayoutWidget):
             self.vy_curve.setData(t, vy)
 
 class MainWindow(QMainWindow):
-    def __init__(self, server):
+    def __init__(self, udp_server, tcp_server):
         super().__init__()
-        self.server = server
+        self.udp_server = udp_server
+        self.tcp_server = tcp_server
         self.central_widget = QWidget()
 
         # Widgets: Buttons, Sliders, ...
         self.video_widget = pg.GraphicsLayoutWidget()
         self.video_widget_box = self.video_widget.addViewBox()
+        self.video_widget_box.setAspectLocked()
         self.video_widget_Item = pg.ImageItem()
         self.video_widget_box.addItem(self.video_widget_Item)
         self.canvas = Canvas()
-        self.control_widget = ControlWidget(server)
+        self.control_widget = ControlWidget(tcp_server)
         self.state_param_panel = StateParamPanel()
 
         # Timer for acquiring images at regular intervals
@@ -197,25 +199,24 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
     def update(self):
         #print( mem_top())
-        frame_queue = self.server.frame_queue.read()
+        frame_queue = self.udp_server.frame_queue.read()
         if frame_queue != []:
-            #frame = cv2.cvtColor( frame_queue[0], cv2.COLOR_BGR2RGB)
+            frame = cv2.cvtColor( frame_queue[0], cv2.COLOR_BGR2RGB)
             #frame = cv2.rotate( frame, cv2.ROTATE_180 )
             #frame = cv2.resize(frame, None, fx=2, fy=2)
-            #frame = frame.transpose([1,0,2])
-            frame = cv2.resize(frame_queue[0].T, None, fx=1, fy=1)
+            frame = frame.transpose([1,0,2])
+            #frame = cv2.resize(frame_queue[0].T, None, fx=1, fy=1)
             frame = cv2.flip(frame, 1)
             #frame = cv2.rotate( frame, cv2.ROTATE_180 )
             self.video_widget_Item.setImage(frame)
         
-        visual_data_queue = self.server.visual_data_queue.read()
-        sensor_data_queue = self.server.sensor_data_queue.read()
+        visual_data_queue = self.udp_server.visual_data_queue.read()
+        sensor_data_queue = self.udp_server.sensor_data_queue.read()
         self.canvas.update(visual_data_queue, sensor_data_queue)
 
-        state_param_queue = self.server.state_param_queue.read()
+        state_param_queue = self.udp_server.state_param_queue.read()
         self.state_param_panel.update(state_param_queue)
     def closeEvent(self, event):
         event.accept()
         #self.server.close()
         self.close()
-
