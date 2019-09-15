@@ -18,7 +18,5 @@ app = QApplication([])
 main_window = MainWindow(udp_server, tcp_server)
 main_window.show()
 app.exit(app.exec_())
-udp_server.close()
-tcp_server.close()
 sys.exit()
 

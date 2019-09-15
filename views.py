@@ -218,5 +218,6 @@ class MainWindow(QMainWindow):
         self.state_param_panel.update(state_param_queue)
     def closeEvent(self, event):
         event.accept()
-        #self.server.close()
+        self.udp_server.close()
+        self.tcp_server.close()
         self.close()
