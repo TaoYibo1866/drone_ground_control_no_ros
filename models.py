@@ -55,15 +55,17 @@ class UdpServer:
     def recv_loop(self):
         try:
             while True:
-                head = bytes2int(self.recvall(1))
-                if head != 0xAA:
+                head = bytes2int(self.recvall(2))
+                if head != 0xAAAA:
                     continue
-                timestamp_ms = bytes2int(self.recvall(8))
                 msg_type = bytes2int(self.recvall(1))
                 length = bytes2int(self.recvall(2))
+                if length < 0 or length >= 30000:
+                    continue
                 buffer = self.recvall(length)
-                tail = bytes2int(self.recvall(1))
-                if tail != 0xDD:
+                timestamp_ms = bytes2int(self.recvall(8))
+                tail = bytes2int(self.recvall(2))
+                if tail != 0xDDDD:
                     continue
                 if msg_type == 0:
                     state_param = struct.unpack("<??", buffer)
@@ -97,8 +99,8 @@ class TcpServer:
         self.conn, self.addr = self.tcp_server.accept()
         self.conn.setblocking( False )
         self.start = time.clock()
-        self.head = bytes([0xAA])
-        self.tail = bytes([0xDD])
+        self.head = 0xAAAA
+        self.tail = 0xDDDD
         self.offline = False
         self.run = True
         self.recv_loop_thread = Thread(target=self.recv_loop)
@@ -113,7 +115,8 @@ class TcpServer:
             return
         msg_type = bytes([msg_type])
         timestamp_ms = int((time.clock() - self.start) * 1000)
-        data = struct.pack("<cqch", self.head, timestamp_ms, msg_type, length) + buf + struct.pack("<c", self.tail)
+        #data = struct.pack("<cqch", self.head, timestamp_ms, msg_type, length) + buf + struct.pack("<c", self.tail)
+        data = struct.pack("<HcH", self.head, msg_type, length) + buf + struct.pack("<qH", timestamp_ms, self.tail)
         self.conn.sendall(data)
     def recv_loop(self):
         while self.run:
