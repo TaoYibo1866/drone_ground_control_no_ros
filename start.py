@@ -1,22 +1,24 @@
+import configparser
+import os
+import sys
 from PyQt5.QtWidgets import QApplication
-
-from models import UdpServer, TcpServer
 from views import MainWindow
 
-from sys import argv
-import sys
+from models import UdpServer
 
-if len( argv ) == 1:
-    host = '192.168.11.27'
-elif argv[1] == "local":
-    host = '127.0.0.1'
-else:
-    print("invalid argv!")
-udp_server = UdpServer(host, 8080)
-tcp_server = TcpServer(host, 8080)
-app = QApplication([])
-main_window = MainWindow(udp_server, tcp_server)
-main_window.show()
-app.exit(app.exec_())
+CONFIG_FILE = "ground_control.cfg"
+if not os.path.exists(os.path.join(os.getcwd(), CONFIG_FILE)):
+    print("[ERROR]: no gound_control.cfg found")
+    sys.exit()
+CONFIG = configparser.ConfigParser()
+CONFIG.read(CONFIG_FILE)
+
+UDP_HOST = CONFIG.get("UDP", "HOST")
+UDP_PORT = CONFIG.getint("UDP", "PORT")
+
+UDP_SERVER = UdpServer(UDP_HOST, UDP_PORT)
+APP = QApplication([])
+MAIN_WINDOW = MainWindow(UDP_SERVER, UDP_SERVER)
+MAIN_WINDOW.show()
+APP.exit(APP.exec_())
 sys.exit()
-
