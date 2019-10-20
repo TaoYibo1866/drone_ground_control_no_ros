@@ -88,36 +88,19 @@ class PoseWidget(pg.GraphicsLayoutWidget):
     def __init__(self):
         super().__init__()
         # Widgets layout
-        self.location = self.addPlot(row=0, col=0, rowspan=3, colspan=1)
-        self.height = self.addPlot(row=3, col=0, rowspan=1, colspan=1)
-        self.v_x = self.addPlot(row=0, col=1, rowspan=1, colspan=1)
-        self.v_y = self.addPlot(row=1, col=1, rowspan=1, colspan=1)
-        self.v_z = self.addPlot(row=2, col=1, rowspan=1, colspan=1)
-        self.yaw = self.addPlot(row=3, col=1, rowspan=1, colspan=1)
+        self.location = self.addPlot()
+        self.height = self.addPlot()
 
         self.location.setXRange(-15, 15)
         self.location.setYRange(-15, 15)
         self.location.setAspectLocked()
         self.height.setXRange(0, 200)
-        self.v_x.setXRange(0, 200)
-        self.v_y.setXRange(0, 200)
-        self.v_z.setXRange(0, 200)
-        self.yaw.setXRange(0, 200)
-        self.yaw.setYRange(-180, 180)
 
         self.location.setLabel('top', text="航迹俯视图(m)")
         self.height.setLabel('top', text="高度(m)")
-        self.v_x.setLabel('top', text='Vx(m/s)')
-        self.v_y.setLabel('top', text='Vy(m/s)')
-        self.v_z.setLabel('top', text='Vz(m/s)')
-        self.yaw.setLabel('top', text='yaw(deg)')
 
         self.location_curve = self.location.plot()
         self.height_curve = self.height.plot()
-        self.v_x_curve = self.v_x.plot()
-        self.v_y_curve = self.v_y.plot()
-        self.v_z_curve = self.v_z.plot()
-        self.yaw_curve = self.yaw.plot()
 
     def update(self, pose_data_queue):
         if pose_data_queue != []:
@@ -125,17 +108,9 @@ class PoseWidget(pg.GraphicsLayoutWidget):
             location_x = data[..., 0]
             location_y = data[..., 1]
             height = data[..., 2]
-            v_x = data[..., 3]
-            v_y = data[..., 4]
-            v_z = data[..., 5]
-            yaw = data[..., 6]
             t = linspace(0, len(pose_data_queue) - 1, len(pose_data_queue))
             self.location_curve.setData(location_x, location_y)
             self.height_curve.setData(t, height)
-            self.v_x_curve.setData(t, v_x)
-            self.v_y_curve.setData(t, v_y)
-            self.v_z_curve.setData(t, v_z)
-            self.yaw_curve.setData(t, yaw)
 
 class ControlWidget(QWidget):
     def __init__(self, server):
@@ -154,6 +129,9 @@ class ControlWidget(QWidget):
         self.backward_button = QPushButton("BACKWARD", self)
         self.left_button = QPushButton("LEFT", self)
         self.right_button = QPushButton("RIGHT", self)
+        self.yaw_pos_button = QPushButton("YAW+", self)
+        self.yaw_neg_button = QPushButton("YAW-", self)
+        self.thrust_button = QPushButton("THRUST", self)
 
         self.start_video_recording_button = QPushButton("录制视频", self)
         self.stop_video_recording_button = QPushButton("停止", self)
@@ -182,6 +160,9 @@ class ControlWidget(QWidget):
         self.backward_button.clicked.connect(self.backward)
         self.left_button.clicked.connect(self.left)
         self.right_button.clicked.connect(self.right)
+        self.yaw_pos_button.clicked.connect(self.yaw_pos)
+        self.yaw_neg_button.clicked.connect(self.yaw_neg)
+        self.thrust_button.clicked.connect(self.thrust)
 
 
         self.position_loop_button.clicked.connect(self.position_loop_show)
@@ -203,6 +184,9 @@ class ControlWidget(QWidget):
         self.layout.addWidget(self.backward_button, 2, 3, 1, 1)
         self.layout.addWidget(self.left_button, 3, 2, 1, 1)
         self.layout.addWidget(self.right_button, 3, 3, 1, 1)
+        self.layout.addWidget(self.yaw_pos_button, 4, 2, 1, 1)
+        self.layout.addWidget(self.yaw_neg_button, 4, 3, 1, 1)
+        self.layout.addWidget(self.thrust_button, 4, 0, 1, 1)
 
         self.layout.addWidget(self.position_loop_button, 1, 4, 1, 2)
         self.layout.addWidget(self.velocity_loop_button, 2, 4, 1, 2)
@@ -246,6 +230,15 @@ class ControlWidget(QWidget):
     def right(self):
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 10)
+    def yaw_pos(self):
+        buf = struct.pack('<?', True)
+        self.server.send_msg(buf, 1, 11)
+    def yaw_neg(self):
+        buf = struct.pack('<?', True)
+        self.server.send_msg(buf, 1, 12)
+    def thrust(self):
+        buf = struct.pack('<?', True)
+        self.server.send_msg(buf, 1, 13)
     def position_loop_show(self):
         self.position_loop_window.show()
 
