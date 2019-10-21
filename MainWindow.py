@@ -78,15 +78,17 @@ class ControlWidget(QFrame):
         self.arm_button = QPushButton("Arm", self)
         self.takeoff_button = QPushButton("起飞", self)
         self.land_button = QPushButton("降落", self)
-        self.up_button = QPushButton("UP", self)
-        self.down_button = QPushButton("DOWN", self)
-        self.forward_button = QPushButton("FORWARD", self)
-        self.backward_button = QPushButton("BACKWARD", self)
-        self.left_button = QPushButton("LEFT", self)
-        self.right_button = QPushButton("RIGHT", self)
-        self.yaw_pos_button = QPushButton("YAW+", self)
-        self.yaw_neg_button = QPushButton("YAW-", self)
-        self.thrust_button = QPushButton("THRUST", self)
+
+        self.up_button = AutoRepeatButton("UP", self)
+        self.down_button = AutoRepeatButton("DOWN", self)
+        self.forward_button = AutoRepeatButton("FORWARD", self)
+        self.backward_button = AutoRepeatButton("BACKWARD", self)
+        self.left_button = AutoRepeatButton("LEFT", self)
+        self.right_button = AutoRepeatButton("RIGHT", self)
+        self.yaw_pos_button = AutoRepeatButton("YAW+", self)
+        self.yaw_neg_button = AutoRepeatButton("YAW-", self)
+        self.thrust_button = AutoRepeatButton("THRUST", self)
+
         self.position_loop_button = QPushButton("位置环", self)
         self.velocity_loop_button = QPushButton("速度环", self)
         self.altitude_loop_button = QPushButton("姿态环", self)
@@ -131,30 +133,39 @@ class ControlWidget(QFrame):
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 2)
     def up(self):
+        print("up")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 3)
     def down(self):
+        print("down")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 4)
     def forward(self):
+        print("forward")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 7)
     def backward(self):
+        print("backward")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 8)
     def left(self):
+        print("left")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 9)
     def right(self):
+        print("right")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 10)
     def yaw_pos(self):
+        print("yaw+")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 11)
     def yaw_neg(self):
+        print("yaw-")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 12)
     def thrust(self):
+        print("thrust")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 13)
     def position_loop_show(self):
@@ -356,3 +367,10 @@ class MissionWidget(QFrame):
         return
     def config(self):
         return
+
+class AutoRepeatButton(QPushButton):
+    def __init__(self, text, _self):
+        super().__init__(text, _self)
+        self.setAutoRepeat(True)
+        self.setAutoRepeatDelay(0)
+        self.setAutoRepeatInterval(10)

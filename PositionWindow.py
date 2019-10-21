@@ -20,7 +20,7 @@ class PositionWidget(pg.GraphicsLayoutWidget):
         self.north_curve = self.north.plot()
         self.east_curve = self.east.plot()
         self.down_curve = self.down.plot()
-    def update(self, position_queue):
+    def update(self):
         return
         #if position_queue != []:
         #    data = np.asarray(position_queue, dtype=np.float)
