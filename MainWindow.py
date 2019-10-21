@@ -24,11 +24,6 @@ class MainWindow(QMainWindow):
         self.mission_widget = MissionWidget(server)
         self.log_widget = LogWidget(server)
 
-        # Timer for acquiring images at regular intervals
-        self.acquisition_timer = QTimer()
-        self.acquisition_timer.start(30)
-        self.acquisition_timer.timeout.connect(self.update)
-
         self.layout.setColumnStretch(0, 1)
         self.layout.setColumnStretch(1, 1)
         self.layout.setRowStretch(0, 6)
@@ -41,9 +36,6 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.log_widget, 2, 0, 1, 2)
 
         self.setCentralWidget(self.central_widget)
-    def update(self):
-        self.camera_widget.update()
-
     def closeEvent(self, event):
         event.accept()
         self.server.close()
@@ -179,7 +171,8 @@ class TelemWidget(QFrame):
         #self.setFrameShadow(QFrame.Sunken)
         self.setLineWidth(3)
         self.layout = QGridLayout(self)
-
+        self.layout.setColumnStretch(0, 21)
+        self.layout.setColumnStretch(1, 5)
         #plot widget
         self.plot_widget = pg.GraphicsLayoutWidget()
         self.map = self.plot_widget.addPlot()
@@ -192,7 +185,7 @@ class TelemWidget(QFrame):
         self.map.setTitle("航迹俯视图(m)")
         self.map_curve = self.map.plot()
 
-        self.layout.addWidget(self.plot_widget, 0, 0, 21, 21)
+        self.layout.addWidget(self.plot_widget, 0, 0, 21, 1)
 
         #label widget
         self.flight_mode_label = QLabel("飞行模式:")
@@ -201,14 +194,14 @@ class TelemWidget(QFrame):
         self.arm_status_label = QLabel("Armed:")
         self.in_air_label = QLabel("inAir:")
 
-        self.height_label = QLabel("高度:00000m")
-        self.roll_label = QLabel("roll:00000deg")
-        self.pitch_label = QLabel("pitch:00000deg")
-        self.yaw_label = QLabel("yaw:00000deg")
-        self.velocity_label = QLabel("速度:00000m/s")
-        self.velocity_north_label = QLabel("速度N:00000m/s")
-        self.velocity_east_label = QLabel("速度E:00000m/s")
-        self.velocity_down_label = QLabel("速度D:00000m/s")
+        self.height_label = QLabel("高度:m")
+        self.roll_label = QLabel("roll:deg")
+        self.pitch_label = QLabel("pitch:deg")
+        self.yaw_label = QLabel("yaw:deg")
+        self.velocity_label = QLabel("速度:m/s")
+        self.velocity_north_label = QLabel("速度N:m/s")
+        self.velocity_east_label = QLabel("速度E:m/s")
+        self.velocity_down_label = QLabel("速度D:m/s")
         
         self.flight_mode_label.setFrameShape(QFrame.Box)
         self.battery_label.setFrameShape(QFrame.Box)
@@ -225,20 +218,20 @@ class TelemWidget(QFrame):
         self.velocity_east_label.setFrameShape(QFrame.Box)
         self.velocity_down_label.setFrameShape(QFrame.Box)
 
-        self.layout.addWidget(self.flight_mode_label, 0, 21, 1, 2)
-        self.layout.addWidget(self.battery_label, 1, 21, 1, 2)
-        self.layout.addWidget(self.rc_status_label, 2, 21, 1, 2)
-        self.layout.addWidget(self.arm_status_label, 3, 21, 1, 2)
-        self.layout.addWidget(self.in_air_label, 4, 21, 1, 2)
+        self.layout.addWidget(self.flight_mode_label, 0, 1, 1, 1)
+        self.layout.addWidget(self.battery_label, 1, 1, 1, 1)
+        self.layout.addWidget(self.rc_status_label, 2, 1, 1, 1)
+        self.layout.addWidget(self.arm_status_label, 3, 1, 1, 1)
+        self.layout.addWidget(self.in_air_label, 4, 1, 1, 1)
 
-        self.layout.addWidget(self.height_label, 10, 21, 1, 2)
-        self.layout.addWidget(self.roll_label, 11, 21, 1, 2)
-        self.layout.addWidget(self.pitch_label, 12, 21, 1, 2)
-        self.layout.addWidget(self.yaw_label, 13, 21, 1, 2)
-        self.layout.addWidget(self.velocity_label, 14, 21, 1, 2)
-        self.layout.addWidget(self.velocity_north_label, 15, 21, 1, 2)
-        self.layout.addWidget(self.velocity_east_label, 16, 21, 1, 2)
-        self.layout.addWidget(self.velocity_down_label, 17, 21, 1, 2)
+        self.layout.addWidget(self.height_label, 10, 1, 1, 1)
+        self.layout.addWidget(self.roll_label, 11, 1, 1, 1)
+        self.layout.addWidget(self.pitch_label, 12, 1, 1, 1)
+        self.layout.addWidget(self.yaw_label, 13, 1, 1, 1)
+        self.layout.addWidget(self.velocity_label, 14, 1, 1, 1)
+        self.layout.addWidget(self.velocity_north_label, 15, 1, 1, 1)
+        self.layout.addWidget(self.velocity_east_label, 16, 1, 1, 1)
+        self.layout.addWidget(self.velocity_down_label, 17, 1, 1, 1)
 
         #button widget
         self.clear_plot_button = QPushButton("清空图窗")
@@ -248,10 +241,33 @@ class TelemWidget(QFrame):
         self.start_log_button.clicked.connect(self.start_log)
         self.stop_log_button.clicked.connect(self.stop_log)
 
-        self.layout.addWidget(self.clear_plot_button, 18, 21, 1, 2)
-        self.layout.addWidget(self.start_log_button, 19, 21, 1, 2)
-        self.layout.addWidget(self.stop_log_button, 20, 21, 1, 2)
+        self.layout.addWidget(self.clear_plot_button, 18, 1, 1, 1)
+        self.layout.addWidget(self.start_log_button, 19, 1, 1, 1)
+        self.layout.addWidget(self.stop_log_button, 20, 1, 1, 1)
+
+        self.telem_timer = QTimer()
+        self.telem_timer.start(500)
+        self.telem_timer.timeout.connect(self.update)
     def update(self):
+        position_queue = self.server.position_queue.read()
+        if position_queue != []:
+            position = position_queue[-1]
+            self.height_label.setText("高度: {: 3.1f}m".format(-1 * position[2]))
+
+        velocity_queue = self.server.velocity_queue.read()
+        if velocity_queue != []:
+            velocity = velocity_queue[-1]
+            self.velocity_label.setText("速度: {: 3.1f}m/s".format(np.linalg.norm(velocity[:3])))
+            self.velocity_north_label.setText("速度N: {: 3.1f}m/s".format(velocity[0]))
+            self.velocity_east_label.setText("速度N: {: 3.1f}m/s".format(velocity[1]))
+            self.velocity_down_label.setText("速度N: {: 3.1f}m/s".format(velocity[2]))
+
+        attitude_queue = self.server.attitude_queue.read()
+        if attitude_queue != []:
+            attitude = attitude_queue[-1]
+            self.roll_label.setText("roll: {: 3.1f}deg".format(attitude[0]))
+            self.pitch_label.setText("pitch: {: 3.1f}deg".format(attitude[1]))
+            self.yaw_label.setText("yaw: {: 3.1f}deg".format(attitude[2]))
         return
         #self.height_label.setText("123456")
         #if pose_data_queue != []:
@@ -314,6 +330,10 @@ class CameraWidget(QFrame):
         self.layout.addWidget(self.visual_feedback_button, 18, 21, 1, 1)
         self.layout.addWidget(self.start_video_recording_button, 19, 21, 1, 1)
         self.layout.addWidget(self.stop_video_recording_button, 20, 21, 1, 1)
+
+        self.camera_timer = QTimer()
+        self.camera_timer.start(50)
+        self.camera_timer.timeout.connect(self.update)
     def update(self):
         frame_queue = self.server.frame_queue.read()
         if frame_queue != []:

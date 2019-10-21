@@ -16,6 +16,11 @@ if not os.path.exists(os.path.join(os.getcwd(), CONFIG_FILE)):
 CONFIG = configparser.ConfigParser()
 CONFIG.read(CONFIG_FILE)
 IMG_MSG = CONFIG.getint("MSG_TYPE", "IMG_MSG")
+POSITION_MSG = CONFIG.getint("MSG_TYPE", "POSITION_MSG")
+VELOCITY_MSG = CONFIG.getint("MSG_TYPE", "VELOCITY_MSG")
+ATTITUDE_MSG = CONFIG.getint("MSG_TYPE", "ATTITUDE_MSG")
+INPUT_MSG = CONFIG.getint("MSG_TYPE", "INPUT_MSG")
+STATUS_MSG = CONFIG.getint("MSG_TYPE", "STATUS_MSG")
 
 def bytes2int(data):
     return int.from_bytes(data, byteorder='little')
@@ -40,6 +45,9 @@ class Queue:
 class UdpServer:
     def __init__(self, host, port):
         self.frame_queue = Queue(1)
+        self.position_queue = Queue(200)
+        self.velocity_queue = Queue(200)
+        self.attitude_queue = Queue(200)
         self.head = 0xAAAA
         self.tail = 0xDDDD
         self.udp_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -94,6 +102,27 @@ class UdpServer:
                         self.frame_queue.push(frame)
                     else:
                         print("img decode error")
+                    continue
+                if msg_type == POSITION_MSG:
+                    assert(length % 32 == 0)
+                    position_vec = struct.iter_unpack("<dddq", buf)
+                    for position in position_vec:
+                        #print(position)
+                        self.position_queue.push(position)
+                    continue
+                if msg_type == VELOCITY_MSG:
+                    assert(length % 32 == 0)
+                    velocity_vec = struct.iter_unpack("<dddq", buf)
+                    for velocity in velocity_vec:
+                        #print(velocity)
+                        self.velocity_queue.push(velocity)
+                    continue
+                if msg_type == ATTITUDE_MSG:
+                    assert(length % 32 ==0)
+                    attitude_vec = struct.iter_unpack('dddq', buf)
+                    for attitude in attitude_vec:
+                        #print(attitude)
+                        self.attitude_queue.push(attitude)
             except (IndexError, AssertionError):
-                print("msg ")
+                print("msg broken")
                 continue
