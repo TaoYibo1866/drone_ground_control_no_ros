@@ -298,6 +298,8 @@ class CameraWidget(QFrame):
         self.start_video_recording_button = QPushButton("录制视频", self)
         self.stop_video_recording_button = QPushButton("停止", self)
 
+        self.start_video_recording_button.clicked.connect(self.start_video_recording)
+        self.stop_video_recording_button.clicked.connect(self.stop_video_recording)
         self.layout.addWidget(self.visual_feedback_button, 18, 21, 1, 1)
         self.layout.addWidget(self.start_video_recording_button, 19, 21, 1, 1)
         self.layout.addWidget(self.stop_video_recording_button, 20, 21, 1, 1)
