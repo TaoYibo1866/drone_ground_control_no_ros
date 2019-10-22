@@ -28,7 +28,6 @@ class MainWindow(QMainWindow):
         self.layout.setColumnStretch(1, 1)
         self.layout.setRowStretch(0, 6)
         self.layout.setRowStretch(1, 2)
-        self.layout.setRowStretch(1, 1)
         self.layout.addWidget(self.camera_widget, 0, 0)
         self.layout.addWidget(self.telem_widget, 0, 1)
         self.layout.addWidget(self.mission_widget, 1, 0)
@@ -49,12 +48,29 @@ class LogWidget(QFrame):
         #self.setFrameShadow(QFrame.Sunken)
         self.setLineWidth(3)
         self.layout = QGridLayout(self)
+        self.layout.setColumnStretch(0, 30)
+        self.layout.setColumnStretch(1, 1)
+
         self.log_widget = QPlainTextEdit()
         self.log_widget.setReadOnly(True)
         self.layout.addWidget(self.log_widget, 0, 0)
-    def update(self):
-        return
 
+        self.clear_button = QPushButton("清空", self)
+        self.clear_button.clicked.connect(self.clear)
+
+        self.layout.addWidget(self.clear_button, 0, 1)
+
+        self.log_timer = QTimer()
+        self.log_timer.start(10)
+        self.log_timer.timeout.connect(self.update)
+    def update(self):
+        log_queue = self.server.log_queue.read()
+        if log_queue != []:
+            for log in log_queue:
+                self.log_widget.appendPlainText(log.decode("utf-8"))
+            log_queue.clear()
+    def clear(self):
+        self.log_widget.setPlainText("")
 class ControlWidget(QFrame):
     def __init__(self, server):
         super().__init__()
@@ -70,6 +86,7 @@ class ControlWidget(QFrame):
         self.arm_button = QPushButton("Arm", self)
         self.takeoff_button = QPushButton("起飞", self)
         self.land_button = QPushButton("降落", self)
+        self.quit_button = QPushButton("QUIT", self)
 
         self.up_button = AutoRepeatButton("UP", self)
         self.down_button = AutoRepeatButton("DOWN", self)
@@ -79,7 +96,6 @@ class ControlWidget(QFrame):
         self.right_button = AutoRepeatButton("RIGHT", self)
         self.yaw_pos_button = AutoRepeatButton("YAW+", self)
         self.yaw_neg_button = AutoRepeatButton("YAW-", self)
-        self.thrust_button = AutoRepeatButton("THRUST", self)
 
         self.position_loop_button = QPushButton("位置环", self)
         self.velocity_loop_button = QPushButton("速度环", self)
@@ -96,7 +112,7 @@ class ControlWidget(QFrame):
         self.right_button.clicked.connect(self.right)
         self.yaw_pos_button.clicked.connect(self.yaw_pos)
         self.yaw_neg_button.clicked.connect(self.yaw_neg)
-        self.thrust_button.clicked.connect(self.thrust)
+        self.quit_button.clicked.connect(self.quit)
         self.position_loop_button.clicked.connect(self.position_loop_show)
 
         self.layout.addWidget(self.arm_button, 0, 0, 1, 2)
@@ -110,7 +126,7 @@ class ControlWidget(QFrame):
         self.layout.addWidget(self.right_button, 3, 1, 1, 1)
         self.layout.addWidget(self.yaw_pos_button, 1, 2, 1, 1)
         self.layout.addWidget(self.yaw_neg_button, 1, 3, 1, 1)
-        self.layout.addWidget(self.thrust_button, 2, 2, 1, 1)
+        self.layout.addWidget(self.quit_button, 2, 2, 1, 1)
         self.layout.addWidget(self.position_loop_button, 1, 5, 1, 1)
         self.layout.addWidget(self.velocity_loop_button, 2, 5, 1, 1)
         self.layout.addWidget(self.altitude_loop_button, 3, 5, 1, 1)
@@ -125,39 +141,30 @@ class ControlWidget(QFrame):
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 2)
     def up(self):
-        print("up")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 3)
     def down(self):
-        print("down")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 4)
     def forward(self):
-        print("forward")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 7)
     def backward(self):
-        print("backward")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 8)
     def left(self):
-        print("left")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 9)
     def right(self):
-        print("right")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 10)
     def yaw_pos(self):
-        print("yaw+")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 11)
     def yaw_neg(self):
-        print("yaw-")
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 12)
-    def thrust(self):
-        print("thrust")
+    def quit(self):
         buf = struct.pack('<?', True)
         self.server.send_msg(buf, 1, 13)
     def position_loop_show(self):
@@ -171,7 +178,7 @@ class TelemWidget(QFrame):
         #self.setFrameShadow(QFrame.Sunken)
         self.setLineWidth(3)
         self.layout = QGridLayout(self)
-        self.layout.setColumnStretch(0, 21)
+        self.layout.setColumnStretch(0, 15)
         self.layout.setColumnStretch(1, 5)
         #plot widget
         self.plot_widget = pg.GraphicsLayoutWidget()
@@ -190,7 +197,7 @@ class TelemWidget(QFrame):
         #label widget
         self.flight_mode_label = QLabel("飞行模式:")
         self.battery_label = QLabel("电量:")
-        self.rc_status_label = QLabel("遥控状态:")
+        self.rc_status_label = QLabel("遥控信号:")
         self.arm_status_label = QLabel("Armed:")
         self.in_air_label = QLabel("inAir:")
 
@@ -246,7 +253,7 @@ class TelemWidget(QFrame):
         self.layout.addWidget(self.stop_log_button, 20, 1, 1, 1)
 
         self.telem_timer = QTimer()
-        self.telem_timer.start(500)
+        self.telem_timer.start(200)
         self.telem_timer.timeout.connect(self.update)
     def update(self):
         position_queue = self.server.position_queue.read()
@@ -268,6 +275,15 @@ class TelemWidget(QFrame):
             self.roll_label.setText("roll: {: 3.1f}deg".format(attitude[0]))
             self.pitch_label.setText("pitch: {: 3.1f}deg".format(attitude[1]))
             self.yaw_label.setText("yaw: {: 3.1f}deg".format(attitude[2]))
+
+        status_queue = self.server.status_queue.read()
+        if status_queue != []:
+            status = status_queue[-1]
+            self.flight_mode_label.setText("飞行模式: {}".format(status[-1].decode('utf-8')))
+            self.battery_label.setText("电量: {: 2.1f}V {: 2.0f}%".format(status[5], status[6] * 100))
+            self.rc_status_label.setText("遥控信号: {} {: 3.0f}".format(status[3], status[4]))
+            self.arm_status_label.setText("Armed: {}".format(status[0]))
+            self.in_air_label.setText("inAir: {}".format(status[1]))
         return
         #self.height_label.setText("123456")
         #if pose_data_queue != []:
@@ -341,6 +357,7 @@ class CameraWidget(QFrame):
             frame = frame.transpose([1, 0, 2])
             frame = cv2.flip(frame, 1)
             self.camera_widget_item.setImage(frame)
+            frame_queue.clear()
     def start_video_recording(self):
         buffer = struct.pack('<?', True)
         self.server.send_msg(buffer, 1, 5)

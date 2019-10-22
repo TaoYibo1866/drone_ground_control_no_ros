@@ -21,6 +21,7 @@ VELOCITY_MSG = CONFIG.getint("MSG_TYPE", "VELOCITY_MSG")
 ATTITUDE_MSG = CONFIG.getint("MSG_TYPE", "ATTITUDE_MSG")
 INPUT_MSG = CONFIG.getint("MSG_TYPE", "INPUT_MSG")
 STATUS_MSG = CONFIG.getint("MSG_TYPE", "STATUS_MSG")
+LOG_MSG = CONFIG.getint("MSG_TYPE", "LOG_MSG")
 
 def bytes2int(data):
     return int.from_bytes(data, byteorder='little')
@@ -41,6 +42,10 @@ class Queue:
         data = self.data
         self.mutex.release()
         return data
+    def clear(self):
+        self.mutex.acquire()
+        self.data.clear()
+        self.mutex.release()
 
 class UdpServer:
     def __init__(self, host, port):
@@ -48,6 +53,8 @@ class UdpServer:
         self.position_queue = Queue(200)
         self.velocity_queue = Queue(200)
         self.attitude_queue = Queue(200)
+        self.status_queue = Queue(1)
+        self.log_queue = Queue(10)
         self.head = 0xAAAA
         self.tail = 0xDDDD
         self.udp_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -118,11 +125,18 @@ class UdpServer:
                         self.velocity_queue.push(velocity)
                     continue
                 if msg_type == ATTITUDE_MSG:
-                    assert(length % 32 ==0)
-                    attitude_vec = struct.iter_unpack('dddq', buf)
+                    assert(length % 32 == 0)
+                    attitude_vec = struct.iter_unpack('<dddq', buf)
                     for attitude in attitude_vec:
                         #print(attitude)
                         self.attitude_queue.push(attitude)
+                if msg_type == STATUS_MSG:
+                    assert(length == 88 )
+                    status = struct.unpack("<????4xddd50s6x", buf)
+                    self.status_queue.push(status)
+                if msg_type == LOG_MSG:
+                    log = struct.unpack("{}s".format(length), buf)[0]
+                    self.log_queue.push(log)
             except (IndexError, AssertionError):
                 print("msg broken")
                 continue
