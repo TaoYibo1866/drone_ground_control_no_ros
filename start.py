@@ -1,8 +1,9 @@
 import configparser
 import os
 import sys
+from sys import argv
 from PyQt5.QtWidgets import QApplication
-from MainWindow import MainWindow
+from windows import MainWindow
 
 from server import UdpServer
 
@@ -13,7 +14,11 @@ if not os.path.exists(os.path.join(os.getcwd(), CONFIG_FILE)):
 CONFIG = configparser.ConfigParser()
 CONFIG.read(CONFIG_FILE)
 
-UDP_HOST = CONFIG.get("UDP", "HOST")
+if len(argv) == 2 and argv[1] == "local":
+    UDP_HOST = "127.0.0.1"
+    print("local")
+else:
+    UDP_HOST = CONFIG.get("UDP", "HOST")
 UDP_PORT = CONFIG.getint("UDP", "PORT")
 
 UDP_SERVER = UdpServer(UDP_HOST, UDP_PORT)

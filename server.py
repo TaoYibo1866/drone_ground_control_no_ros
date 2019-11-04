@@ -1,9 +1,10 @@
 import sys
 import os
+import csv
 from threading import Thread, Lock
 import socket
 import struct
-
+from datetime import datetime
 import configparser
 import cv2
 import numpy as np
@@ -19,8 +20,8 @@ IMG_MSG = CONFIG.getint("MSG_TYPE", "IMG_MSG")
 POSITION_MSG = CONFIG.getint("MSG_TYPE", "POSITION_MSG")
 VELOCITY_MSG = CONFIG.getint("MSG_TYPE", "VELOCITY_MSG")
 ATTITUDE_MSG = CONFIG.getint("MSG_TYPE", "ATTITUDE_MSG")
-INPUT_MSG = CONFIG.getint("MSG_TYPE", "INPUT_MSG")
 STATUS_MSG = CONFIG.getint("MSG_TYPE", "STATUS_MSG")
+INPUT_ALTITUDE_MSG = CONFIG.getint("MSG_TYPE", "INPUT_ALTITUDE_MSG")
 LOG_MSG = CONFIG.getint("MSG_TYPE", "LOG_MSG")
 
 def bytes2int(data):
@@ -50,11 +51,15 @@ class Queue:
 class UdpServer:
     def __init__(self, host, port):
         self.frame_queue = Queue(1)
-        self.position_queue = Queue(200)
-        self.velocity_queue = Queue(200)
-        self.attitude_queue = Queue(200)
+        self.position_queue = Queue(600)
+        self.velocity_queue = Queue(600)
+        self.attitude_queue = Queue(600)
         self.status_queue = Queue(1)
         self.log_queue = Queue(10)
+        self.input_attitude_queue = Queue(1000)
+        self.reference_queue = Queue(1000)
+        self.target_queue = Queue(600)
+        self.control_status_queue = Queue(1000)
         self.head = 0xAAAA
         self.tail = 0xDDDD
         self.udp_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -65,9 +70,12 @@ class UdpServer:
         self.client_address = None
         self.recv_thread = Thread(target=self.recv_loop)
         self.recv_thread.start()
+        self.csv_file = open("log/" + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ".csv", "w")
+        self.log_file = csv.writer(self.csv_file, delimiter=',')
     def close(self):
         self.udp_server.close()
         self.recv_thread.join()
+        self.csv_file.close()
         return
     def send_msg(self, buf, length, msg_type):
         self.client_address_mutex.acquire()
@@ -96,7 +104,6 @@ class UdpServer:
                 length = bytes2int(packet[3:5])
                 buf = packet[5:5+length]
                 assert bytes2int(packet[5+length:]) == 0xDDDD
-
                 self.client_address_mutex.acquire()
                 if not address == self.client_address:
                     self.client_address = address
@@ -116,6 +123,7 @@ class UdpServer:
                     for position in position_vec:
                         #print(position)
                         self.position_queue.push(position)
+                        self.log_file.writerow(["PositionNED"] + list(position))
                     continue
                 if msg_type == VELOCITY_MSG:
                     assert(length % 32 == 0)
@@ -123,6 +131,7 @@ class UdpServer:
                     for velocity in velocity_vec:
                         #print(velocity)
                         self.velocity_queue.push(velocity)
+                        self.log_file.writerow(["VelocityNED"] + list(velocity))
                     continue
                 if msg_type == ATTITUDE_MSG:
                     assert(length % 32 == 0)
@@ -130,6 +139,7 @@ class UdpServer:
                     for attitude in attitude_vec:
                         #print(attitude)
                         self.attitude_queue.push(attitude)
+                        self.log_file.writerow(["EulerAngle"] + list(attitude))
                 if msg_type == STATUS_MSG:
                     assert(length == 88 )
                     status = struct.unpack("<????4xddd50s6x", buf)
@@ -137,6 +147,30 @@ class UdpServer:
                 if msg_type == LOG_MSG:
                     log = struct.unpack("{}s".format(length), buf)[0]
                     self.log_queue.push(log)
+                if msg_type == INPUT_ALTITUDE_MSG:
+                    assert(length % 40 == 0)
+                    input_attitude_vec = struct.iter_unpack("<ddddq", buf)
+                    for input_attitude in input_attitude_vec:
+                        self.input_attitude_queue.push(input_attitude)
+                        self.log_file.writerow(["InputAttitude"] + list(input_attitude))
+                if msg_type == 8:
+                    assert(length % 16 == 0)
+                    reference_vec = struct.iter_unpack("<dq", buf)
+                    for reference in reference_vec:
+                        self.reference_queue.push(reference)
+                        self.log_file.writerow(["Reference"] + list(reference))
+                if msg_type == 9:
+                    assert(length % 56 == 0)
+                    target_vec = struct.iter_unpack("<h6xdddddq", buf)
+                    for target in target_vec:
+                        self.target_queue.push(target)
+                        self.log_file.writerow(["Target"] + list(target))
+                if msg_type == 11:
+                    assert(length % 16 == 0)
+                    control_status_vec = struct.iter_unpack("<h6xq", buf)
+                    for status in control_status_vec:
+                        self.control_status_queue.push(status)
+                        self.log_file.writerow(["ControlStatus"] + list(status))
             except (IndexError, AssertionError):
                 print("msg broken")
                 continue
