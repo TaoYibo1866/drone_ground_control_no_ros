@@ -209,22 +209,22 @@ class AltitudeLoopWidget(QWidget):
         input_attitude_queue = self.server.input_attitude_queue.read()
         if input_attitude_queue != []:
             input_attitude = np.asarray(input_attitude_queue, np.float32)
-            input_attitude_t = input_attitude[:, 0] / 1000
-            thrust = input_attitude[:, 4]
+            input_attitude_t = input_attitude[:, -1] / 1000
+            thrust = input_attitude[:, 3]
             self.thrust.setXRange(input_attitude_t[-1] - 20, input_attitude_t[-1])
             self.thrust_curve.setData(input_attitude_t, thrust, pen=pg.mkPen('b'))
         reference_queue = self.server.reference_queue.read()
         if reference_queue != []:
             reference = np.asarray(reference_queue, np.float32)
-            reference_t = reference[:, 0] / 1000
-            reference_alt = -1 * reference[:, 1]
+            reference_t = reference[:, -1] / 1000
+            reference_alt = -1 * reference[:, 0]
             self.altitude.setXRange(reference_t[-1] - 20, reference_t[-1])
             self.reference_curve.setData(reference_t, reference_alt, pen=pg.mkPen('g'))
         position_queue = self.server.position_queue.read()
         if position_queue != []:
             position = np.asarray(position_queue, np.float32)
-            position_t = position[:, 0] / 1000
-            altitude = -1 * position[:, 3]
+            position_t = position[:, -1] / 1000
+            altitude = -1 * position[:, 2]
             self.altitude.setXRange(position_t[-1] - 20, position_t[-1])
             self.altitude_curve.setData(position_t, altitude, pen=pg.mkPen('r'))
 
