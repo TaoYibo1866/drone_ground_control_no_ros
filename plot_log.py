@@ -33,7 +33,7 @@ with open(path) as f:
             control_status.append(row[1:])
         elif row[0] == 'PosXYErr':
             pos_xy_err.append(row[1:])
-
+   
 if pos_xy_err != []:
     err = np.asarray(pos_xy_err, np.float32)
     err_t = err[:,0] / 1000
@@ -49,6 +49,17 @@ if pos_xy_err != []:
     ax1.set_ylabel("X/m")
     ax2.set_ylabel("Y/m")
     fig5.show()
+
+if control_status != []:
+    control_status = np.asarray(control_status, np.float32)
+    c_t = control_status[:,0] / 1000
+    c = control_status[:,1]
+    fig9, (ax1, ax2) = plt.subplots(2, 1)
+    fig9.subplots_adjust(hspace=0.1)
+    ax1.plot(c_t, c)
+    ax1.grid(True)
+    fig9.suptitle("ControlStatus")
+    fig9.show()
 
 if position_ned != []:
     position_ned = np.asarray(position_ned, np.float32)
@@ -127,18 +138,21 @@ if input_attitude != []:
     input_thrust = input_attitude[:,4]
     input_t = input_attitude[:,0] / 1000
 
-    fig3, (ax1, ax2, ax3) = plt.subplots(3, 1)
+    fig3, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1)
     fig3.subplots_adjust(hspace=0.1)
     ax1.plot(input_t, input_roll)
     ax2.plot(input_t, input_pitch)
-    ax3.plot(input_t, input_thrust)
+    ax3.plot(input_t, input_yaw)
+    ax4.plot(input_t, input_thrust)
     ax1.grid(True)
     ax2.grid(True)
     ax3.grid(True)
+    ax4.grid(True)
     fig3.suptitle('InputAttitude')
     ax1.set_ylabel("roll/deg")
     ax2.set_ylabel("pitch/deg")
-    ax3.set_ylabel("thrust/deg")
+    ax3.set_ylabel("yaw/deg")
+    ax4.set_ylabel("thrust")
     fig3.show()
 
 if reference_down != []:
@@ -152,6 +166,23 @@ if reference_down != []:
     fig6.suptitle('ReferenceDown')
     ax.set_ylabel("-pos_sp_z/m")
     fig6.show()
+    
+if velocity_body != []:
+    velocity = np.asarray(velocity_body, np.float32)
+    velocity_t = velocity[:,0] / 1000
+    velocity_x = velocity[:,1]
+    velocity_y = velocity[:,2]
+    velocity_z = velocity[:,3]
+    fig7, (ax1, ax2, ax3) = plt.subplots(3, 1)
+    fig7.subplots_adjust(hspace=0.1)
+    ax1.plot(velocity_t, velocity_x)
+    ax1.grid(True)
+    ax2.plot(velocity_t, velocity_y)
+    ax2.grid(True)
+    ax3.plot(velocity_t, velocity_z)
+    ax3.grid(True)
+    fig7.suptitle('VelocityBody')
+    fig7.show()
 
 # fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1)
 # fig.subplots_adjust(hspace=0.1)
