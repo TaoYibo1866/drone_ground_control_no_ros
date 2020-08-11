@@ -5,7 +5,6 @@ import struct
 from datetime import datetime
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QGridLayout, QWidget, QPushButton, QLabel, QFrame, QPlainTextEdit, QTabWidget
-from PyQt5.QtMultimedia import QSound
 import numpy as np
 import pyqtgraph as pg
 #from mem_top import mem_top
@@ -32,7 +31,7 @@ SEARCH_RING = CONFIG.getint("CONTROL_STATUS", "SEARCH_RING")
 
 class PositionWidget(QWidget):
     def __init__(self, server):
-        super().__init__()
+        QWidget.__init__(self)
         self.run = True
         self.server = server
         self.layout = QGridLayout(self)
@@ -124,7 +123,7 @@ class PositionWidget(QWidget):
 
 class TargetWidget(QWidget):
     def __init__(self, server):
-        super().__init__()
+        QWidget.__init__(self)
         self.run = True
         self.server = server
         self.layout = QGridLayout(self)
@@ -218,7 +217,7 @@ class TargetWidget(QWidget):
 
 class VelocityLoopWidget(QWidget):
     def __init__(self, server):
-        super().__init__()
+        QWidget.__init__(self)
         self.run = True
         self.server = server
         self.layout = QGridLayout(self)
@@ -279,7 +278,7 @@ class VelocityLoopWidget(QWidget):
 
 class AltitudeLoopWidget(QWidget):
     def __init__(self, server):
-        super().__init__()
+        QWidget.__init__(self)
         self.run = True
         self.server = server
         self.layout = QGridLayout(self)
@@ -372,7 +371,7 @@ class AltitudeLoopWidget(QWidget):
 
 class MissionWidget(QFrame):
     def __init__(self, server):
-        super().__init__()
+        QFrame.__init__(self)
         self.server = server
         self.setFrameShape(QFrame.Box)
         self.setFrameShadow(QFrame.Sunken)
@@ -432,22 +431,22 @@ class MissionWidget(QFrame):
             if status == self.last_status:
                 return
             self.last_status = status
-            if status == SAFE_QUIT_COMMAND:
-                QSound(r'vocal/异常保护.wav').play()
-            elif status == FORCE_QUIT_COMMAND:
-                print("aaaa")
-                QSound(r'vocal/紧急退出.wav').play()
-            elif status == ALTITUDE_STAY_MODE:
-                QSound(r'vocal/定高模式.wav').play()
-            elif status == VISION_CONTROL_COMMAND:
-                QSound(r'vocal/视觉模式.wav').play()
-            elif status == FLOW_HOLD_MODE:
-                QSound(r'vocal/定点模式.wav').play()
+            # if status == SAFE_QUIT_COMMAND:
+            #     QSound(r'vocal/异常保护.wav').play()
+            # elif status == FORCE_QUIT_COMMAND:
+            #     print("aaaa")
+            #     QSound(r'vocal/紧急退出.wav').play()
+            # elif status == ALTITUDE_STAY_MODE:
+            #     QSound(r'vocal/定高模式.wav').play()
+            # elif status == VISION_CONTROL_COMMAND:
+            #     QSound(r'vocal/视觉模式.wav').play()
+            # elif status == FLOW_HOLD_MODE:
+            #     QSound(r'vocal/定点模式.wav').play()
 
             
 class TabWidget(QFrame):
     def __init__(self, server):
-        super().__init__()
+        QFrame.__init__(self)
         self.server = server
         self.setFrameShape(QFrame.Box)
         self.setFrameShadow(QFrame.Sunken)
@@ -477,7 +476,7 @@ class TabWidget(QFrame):
 
 class LocusWidget(QWidget):
     def __init__(self, server):
-        super().__init__()
+        QWidget.__init__(self)
         self.server = server
         self.layout = QGridLayout(self)
         self.layout.setRowStretch(0, 10)
@@ -522,7 +521,7 @@ class LocusWidget(QWidget):
 
 class CameraWidget(QFrame):
     def __init__(self, server):
-        super().__init__()
+        QFrame.__init__(self)
         self.server = server
         self.setFrameShape(QFrame.Box)
         self.setFrameShadow(QFrame.Sunken)
@@ -552,7 +551,7 @@ class CameraWidget(QFrame):
 
 class LogWidget(QFrame):
     def __init__(self, server):
-        super().__init__()
+        QFrame.__init__(self)
         self.server = server
         self.setFrameShape(QFrame.Box)
         self.setFrameShadow(QFrame.Sunken)
@@ -584,7 +583,7 @@ class LogWidget(QFrame):
 
 class TelemWidget(QWidget):
     def __init__(self, server):
-        super().__init__()
+        QWidget.__init__(self)
         self.server = server
         self.layout = QGridLayout(self)
 
@@ -707,13 +706,13 @@ class TelemWidget(QWidget):
 
 class AutoRepeatButton(QPushButton):
     def __init__(self, text, _self):
-        super().__init__(text, _self)
+        QPushButton.__init__(self, text, _self)
         self.setAutoRepeat(True)
         self.setAutoRepeatDelay(0)
         self.setAutoRepeatInterval(10)
 
 class ToggleButton(QPushButton):
     def __init__(self, text, _self):
-        super().__init__(text[0], _self)
+        QPushButton.__init__(self, text[0], _self)
         self.text = text
         self.state = 0

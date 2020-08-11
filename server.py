@@ -9,6 +9,7 @@ import configparser
 from collections import deque
 import cv2
 import numpy as np
+import copy
 
 
 CONFIG_FILE = "ground_control.cfg"
@@ -38,7 +39,7 @@ class Queue:
         self.mutex.release()
     def read(self):
         self.mutex.acquire()
-        data = self.data.copy()
+        data = copy.deepcopy(self.data)
         self.mutex.release()
         return data
     def clear(self):

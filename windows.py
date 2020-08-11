@@ -8,7 +8,7 @@ from widgets import CameraWidget, TelemWidget, TabWidget, MissionWidget, LogWidg
 
 class MainWindow(QMainWindow):
     def __init__(self, server):
-        super().__init__()
+        QMainWindow.__init__(self)
         self.server = server
         self.central_widget = QWidget()
         self.layout = QGridLayout(self.central_widget)
